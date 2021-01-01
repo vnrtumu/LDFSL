@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import Fontisto from 'react-native-vector-icons/Fontisto';
+import COLORS from '../consts/colors';
 
 const EmployeeProfileScreen = () => {
   return (
@@ -52,7 +53,7 @@ const styles = StyleSheet.create({
   prrileContainer: {
     height: 250,
     width: '100%',
-    backgroundColor: '#15549a',
+    backgroundColor: COLORS.primary,
     flexDirection: 'row',
     justifyContent: 'center',
   },

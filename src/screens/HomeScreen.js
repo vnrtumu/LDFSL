@@ -114,10 +114,10 @@ const style = StyleSheet.create({
     justifyContent: 'center',
     width: cardWidth,
     marginHorizontal: 10,
-    marginBottom: 20,
-    marginTop: 50,
+    marginBottom: 10,
+    marginTop: 20,
     borderRadius: 15,
-    elevation: 13,
+    elevation: 8,
     backgroundColor: COLORS.white,
   },
   addToCartBtn: {
