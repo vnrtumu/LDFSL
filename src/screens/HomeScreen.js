@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   Dimensions,
   Image,
@@ -16,33 +16,56 @@ import {
 } from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import COLORS from '../consts/colors';
-import foods from '../consts/foods';
+
+import axios from 'axios';
+import AsyncStorage from "@react-native-community/async-storage";
 
 const {width} = Dimensions.get('screen');
 const cardWidth = width / 2 - 20;
 
-const getRandomColor = () => {
-  var letters = "0123456789ABCDEF";
-  var color = "#";
-  for (var i = 0; i < 6; i++) {
-    color += letters[Math.floor(Math.random() * 16)];
-  }
-  return color;
-};
 
 const HomeScreen = ({navigation}) => {
-  const [selectedCategoryIndex, setSelectedCategoryIndex] = React.useState(0);
+  const[name, setName] = useState('');
+  const[userId, setUserId] = useState('');
+  const[types, setTypes] = useState([]);
 
-  const Card = ({food}) => {
+  AsyncStorage.getItem('name').then(name => {
+    if (name) {
+      setName(name);
+    }
+  });
+  AsyncStorage.getItem('user_id').then(user_id => {
+    if (user_id) {
+      setUserId(user_id);
+    }
+  });
+
+  
+  useEffect( () => {
+    var url = "http://loandarbar.in/api/typeofappointments";
+        AsyncStorage.getItem('token').then(token => {
+          if (token) {
+                axios.get(`${url}`,  {
+                    headers: {Authorization: 'Bearer ' + token },
+                })
+                .then(res => {
+                  console.log(res.data.success);
+                  setTypes(res.data.success)
+                })
+                .catch(error => console.error(`Error: ${error}`));
+          }
+        });
+  }, []);
+
+  const Card = ({type}) => {
     return (
       <TouchableHighlight
         underlayColor={COLORS.white}
         activeOpacity={0.9}
-        onPress={() => navigation.navigate('CustomerList', food)} >
-        {/* <View style={[style.card, {backgroundColor: getRandomColor(), opacity: 0.7}]} > */}
+        onPress={() => navigation.navigate('CustomerList', type)} >
         <View style={style.card} >
           <View style={{marginHorizontal: 20}}>
-            <Text style={{fontSize: 18, fontWeight: 'bold',  zIndex: 1,  }}>{food.name}</Text>
+            <Text style={{fontSize: 18, fontWeight: 'bold',  zIndex: 1,  }}>{type.type_name}</Text>
           </View>
           <View
             style={{
@@ -52,7 +75,7 @@ const HomeScreen = ({navigation}) => {
               justifyContent: 'space-between',
             }}>
             <Text style={{fontSize: 18, fontWeight: 'bold'}}>
-              {food.count}
+              {type.count}
             </Text>
             <View style={style.addToCartBtn}>
               <Icon name="chevron-right" size={20} color={COLORS.white} />
@@ -69,7 +92,7 @@ const HomeScreen = ({navigation}) => {
           <View style={{flexDirection: 'row'}}>
             <Text style={{fontSize: 22}}>Hello,</Text>
             <Text style={{fontSize: 25, fontWeight: 'bold', marginLeft: 10}}>
-              Venkat
+              {name}
             </Text>
           </View>
           <Text style={{marginTop: 5, fontSize: 22, color: COLORS.grey}}>
@@ -81,12 +104,12 @@ const HomeScreen = ({navigation}) => {
           style={{height: 50, width: 50, borderRadius: 25}}
         />
       </View>
-      
       <FlatList
         showsVerticalScrollIndicator={false}
         numColumns={2}
-        data={foods}
-        renderItem={({item}) => <Card food={item} />}
+        data={types}
+        keyExtractor={(item, index) => item.type_id}
+        renderItem={({item}) => <Card type={item} />}
       />
     </SafeAreaView>
   );

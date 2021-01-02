@@ -1,11 +1,43 @@
-import React from 'react';
+import React, {useState, useEffect} from 'react';
 import { SafeAreaView, StyleSheet, View, Text, Image, TextInput} from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import COLORS from '../consts/colors';
 import { SecondaryButton } from '../components/Button';
+import { sub } from 'react-native-reanimated';
+import axios from 'axios';
+import AsyncStorage from "@react-native-community/async-storage";
 
 const LoginScreen = ({ navigation, route }) => {
+  //setting initial state 
+  const [email, setEmail] = useState('banana');
+  const [password, setPassword] = useState('');
+
+  const handleEmaiChange = (val) => {
+    setEmail(val)
+  }
+
+  const handlePasswordChange = (val) => {
+    setPassword(val);
+  }
+
+  const loginHandle = () => {
+      console.log(email);
+      console.log(password);
+      const url = "http://loandarbar.in/api/login";
+      console.log(url);
+      axios.post(`${url}`, {email, password})
+            .then((response)=> {
+                console.log(response.data.success);
+                AsyncStorage.setItem('token', response.data.success.token);
+                AsyncStorage.setItem('name', response.data.success.name);
+                AsyncStorage.setItem('email', response.data.success.email);
+                AsyncStorage.setItem('user_id', JSON.stringify(response.data.success.user_id));
+                navigation.navigate('Home');
+            })
+            .catch(error => console.error(`Error: ${error}`));
+  }
+
   return (
     <SafeAreaView style={{ backgroundColor: COLORS.white }}>
       <View style={style.header}>
@@ -38,7 +70,13 @@ const LoginScreen = ({ navigation, route }) => {
                 size={20}
                 style={style.inputIcon}
               />
-              <TextInput placeholder="Email" placeholderTextColor = {COLORS.light} style={style.input} />
+              <TextInput 
+                placeholder="Email" 
+                placeholderTextColor = {COLORS.light} 
+                style={style.input}
+                autoCapitalize="none"
+                onChangeText={(val) => handleEmaiChange(val)}
+              />
             </View>
             <View style={style.inputContainer}>
               <Icon
@@ -52,12 +90,13 @@ const LoginScreen = ({ navigation, route }) => {
                 style={style.input}
                 secureTextEntry
                 placeholderTextColor = {COLORS.light}
+                onChangeText={(val) => handlePasswordChange(val)}
               />
             </View>
 
 
             <View style={{ marginTop: 40, marginBottom: 40 }}>
-              <SecondaryButton title="Login To LDFSL" onPress={() => navigation.navigate('Home')} />
+              <SecondaryButton title="Login To LDFSL" onPress={() => loginHandle()} />
             </View>
           </View>
         </View>

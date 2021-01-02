@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, {  useState } from 'react';
 import {
   View,
   Text,
@@ -11,8 +11,18 @@ import {
 } from 'react-native';
 import Fontisto from 'react-native-vector-icons/Fontisto';
 import COLORS from '../consts/colors';
+import axios from 'axios';
+import AsyncStorage from "@react-native-community/async-storage";
 
 const EmployeeProfileScreen = () => {
+
+  const[name, setName] = useState('');
+
+  AsyncStorage.getItem('name').then(name => {
+    if (name) {
+      setName(name);
+    }
+  });
   return (
     <ScrollView
       style={styles.mainContainer}
@@ -35,7 +45,7 @@ const EmployeeProfileScreen = () => {
           </View>
         </View>
         <View style={styles.nameContainer}>
-          <Text style={styles.textStyle}>Venkat Reddy</Text>
+          <Text style={styles.textStyle}>{name}</Text>
         </View>
       </View>
       <View style={styles.settingsContainer}>

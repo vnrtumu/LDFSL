@@ -1,21 +1,50 @@
-import React from 'react';
-import { SafeAreaView, StyleSheet, View, Text, Image, TouchableHighlight } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { SafeAreaView, StyleSheet, View, Text, Image, TouchableHighlight, TouchableOpacity } from 'react-native';
 import { FlatList } from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import COLORS from '../consts/colors';
-import foods from '../consts/foods';
-import { PrimaryButton } from '../components/Button';
-import { CheckBox } from 'react-native-elements';
+import Communications from 'react-native-communications';
 
-const CustomersListScreen = ({ navigation }) => {
-  const CartCard = ({ item }) => {
+import axios from 'axios';
+import AsyncStorage from "@react-native-community/async-storage";
+
+const CustomersListScreen = ({ navigation, route }) => {
+  const item = route.params;
+  const [customers, setCustomers] = useState([]);
+
+
+  useEffect(() => {
+    var url = "http://loandarbar.in/api/appointments";
+
+    const type = {
+      typeId: item.type_id,
+    };
+
+    AsyncStorage.getItem('token').then(token => {
+      if (token) {
+        axios
+          .post(`${url}`, type, {
+            headers: {
+              Authorization: 'Bearer ' + token,
+            },
+          })
+          .then(res => {
+            console.log(res.data.success);
+            setCustomers(res.data.success);
+          })
+          .catch(error => console.error(`Error: ${error}`));
+      }
+    });
+  }, []);
+
+  const CartCard = ({ customer }) => {
     return (
       <TouchableHighlight
         underlayColor={COLORS.white}
         activeOpacity={0.9}
-        onPress={() => navigation.navigate('SingleCustomer')} >
+        onPress={() => navigation.navigate('SingleCustomer', customer)} >
         <View style={style.cartCard}>
-          <Image source={item.image} style={{ height: 80, width: 80 }} />
+          <Image source={require('../assets/avatar.png')} style={{ height: 80, width: 80 }} />
           <View
             style={{
               height: 100,
@@ -24,11 +53,16 @@ const CustomersListScreen = ({ navigation }) => {
               flex: 1,
               justifyContent: 'center',
             }}>
-            <Text style={{ fontWeight: 'bold', fontSize: 16 }}>{item.name}</Text>
+            <Text style={{ fontWeight: 'bold', fontSize: 16 }}>{customer.cust_name}</Text>
+            <Text style={{ fontSize: 16, marginTop: 5, color: "skyblue" }}>{customer.appointment_date} {customer.time_slot}</Text>
           </View>
           <View style={{ marginRight: 20, alignItems: 'center' }}>
             <View>
-              <Text style={{ fontSize: 18, color: COLORS.primary }}>Call</Text>
+              <TouchableOpacity onPress={
+                () => Communications.phonecall(`${customer.cust_phone}`, true)
+              }>
+                <Text style={{ fontSize: 18, color: COLORS.primary }}>Call</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </View>
@@ -39,13 +73,14 @@ const CustomersListScreen = ({ navigation }) => {
     <SafeAreaView style={{ backgroundColor: COLORS.white, flex: 1 }}>
       <View style={style.header}>
         <Icon name="arrow-back-ios" size={28} onPress={navigation.goBack} />
-        <Text style={{ fontSize: 20, fontWeight: 'bold' }}>Customers</Text>
+        <Text style={{ fontSize: 20, fontWeight: 'bold' }}>{item.type_name}</Text>
       </View>
       <FlatList
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 80 }}
-        data={foods}
-        renderItem={({ item }) => <CartCard item={item} />}
+        data={customers}
+        keyExtractor={(item, index) => item.cust_id}
+        renderItem={({ item }) => <CartCard customer={item} />}
         ListFooterComponentStyle={{ paddingHorizontal: 20, marginTop: 20 }}
       />
     </SafeAreaView>

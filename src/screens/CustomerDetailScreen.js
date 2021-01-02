@@ -6,11 +6,11 @@ import COLORS from '../consts/colors';
 import { SecondaryButton } from '../components/Button';
 import { CheckBox } from 'react-native-elements';
 
-const initiateWhatsAppSMS = () => {
+const initiateWhatsAppSMS = (val) => {
   // Using 91 for India
   // You can change 91 with your country code
   let url =
-    'whatsapp://send?text=hi venkat reddy&phone=91 8790010929';
+    'whatsapp://send?text=hi venkat reddy&phone=91 '+val;
   Linking.openURL(url)
     .then((data) => {
       console.log('WhatsApp Opened');
@@ -22,6 +22,7 @@ const initiateWhatsAppSMS = () => {
 
 
 const CustomerDetailScreen = ({ navigation, route }) => {
+  const customer = route.params;
   return (
     <View style={styles.mainContainer}>
       <View style={styles.profileContainer}>
@@ -31,27 +32,27 @@ const CustomerDetailScreen = ({ navigation, route }) => {
           </TouchableOpacity>
         </View>
         <View style={styles.imageContainer}>
-          <Image source={require('../assets/pic.jpeg')} style={styles.imageStyle} />
+          <Image source={require('../assets/avatar.png')} style={styles.imageStyle} />
         </View>
         <View style={styles.addressContainer}>
-          <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#fff' }}>Venkat Reddy</Text>
+          <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#fff' }}>{customer.cust_name}</Text>
           <Text style={{ fontSize: 14, color: '#fff' }}>45th cross, Jayanagar, Bangalore.</Text>
         </View>
         <View bottomProfileContainer>
           <TouchableOpacity
             style={styles.buttonStyle}
             onPress={
-              () => Communications.phonecall('8790010929', true)
+              () => Communications.phonecall(`${customer.cust_phone}`, true)
             }>
             <Icon name="ios-call" size={23} color="#fff" />
             <Text style={{ color: '#fff', fontSize: 18, marginLeft: 5, justifyContent: 'center', alignSelf: 'center', }} >
-              +91 87900 10929
+            {customer.cust_phone}
                         </Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.buttonStyle} onPress={() => initiateWhatsAppSMS()} >
+          <TouchableOpacity style={styles.buttonStyle} onPress={() => initiateWhatsAppSMS(`${customer.cust_phone}`)} >
             <Icon name="logo-whatsapp" size={23} color="#fff" />
             <Text style={{ color: '#fff', fontSize: 18, marginLeft: 5, justifyContent: 'center', alignSelf: 'center', }} >
-              +91 91823 87725
+              {customer.cust_phone}
                         </Text>
           </TouchableOpacity>
         </View>
