@@ -49,7 +49,6 @@ const HomeScreen = ({navigation}) => {
                     headers: {Authorization: 'Bearer ' + token },
                 })
                 .then(res => {
-                  console.log(res.data.success);
                   setTypes(res.data.success)
                 })
                 .catch(error => console.error(`Error: ${error}`));

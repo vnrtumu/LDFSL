@@ -13,8 +13,9 @@ import Fontisto from 'react-native-vector-icons/Fontisto';
 import COLORS from '../consts/colors';
 import axios from 'axios';
 import AsyncStorage from "@react-native-community/async-storage";
+import { PrimaryButton } from '../components/Button';
 
-const EmployeeProfileScreen = () => {
+const EmployeeProfileScreen = ({navigation}) => {
 
   const[name, setName] = useState('');
 
@@ -23,6 +24,10 @@ const EmployeeProfileScreen = () => {
       setName(name);
     }
   });
+  logoutHandle = () => {
+    AsyncStorage.clear();
+    navigation.navigate('Login');
+  };
   return (
     <ScrollView
       style={styles.mainContainer}
@@ -49,8 +54,7 @@ const EmployeeProfileScreen = () => {
         </View>
       </View>
       <View style={styles.settingsContainer}>
-        
-       
+          <PrimaryButton title="Log Out" onPress={() => logoutHandle()} />
       </View>
     </ScrollView>
   );

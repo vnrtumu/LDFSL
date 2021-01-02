@@ -28,7 +28,6 @@ const LoginScreen = ({ navigation, route }) => {
       console.log(url);
       axios.post(`${url}`, {email, password})
             .then((response)=> {
-                console.log(response.data.success);
                 AsyncStorage.setItem('token', response.data.success.token);
                 AsyncStorage.setItem('name', response.data.success.name);
                 AsyncStorage.setItem('email', response.data.success.email);

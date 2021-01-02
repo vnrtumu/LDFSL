@@ -1,21 +1,42 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { SafeAreaView, StyleSheet, View, Text, Image, TouchableHighlight } from 'react-native';
 import { FlatList } from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import COLORS from '../consts/colors';
 import foods from '../consts/foods';
-import { PrimaryButton } from '../components/Button';
-import { CheckBox } from 'react-native-elements';
+
+import axios from 'axios';
+import AsyncStorage from "@react-native-community/async-storage";
 
 const OldListScreen = ({ navigation }) => {
-  const CartCard = ({ item }) => {
+  const [customers, setCustomers] = useState([]);
+  useEffect(() => {
+    var url = "http://loandarbar.in/api/closedappointments";
+
+    AsyncStorage.getItem('token').then(token => {
+      if (token) {
+        axios
+          .get(`${url}`,  {
+            headers: {
+              Authorization: 'Bearer ' + token,
+            },
+          })
+          .then(res => {
+            console.log(res.data.success);
+            setCustomers(res.data.success);
+          })
+          .catch(error => console.error(`Error: ${error}`));
+      }
+    });
+  }, []);
+  const CartCard = ({ customer }) => {
     return (
       <TouchableHighlight
         underlayColor={COLORS.white}
         activeOpacity={0.9}
         >
         <View style={style.cartCard}>
-          <Image source={item.image} style={{ height: 80, width: 80 }} />
+        <Image source={require('../assets/avatar.png')} style={{ height: 80, width: 80 }} />
           <View
             style={{
               height: 100,
@@ -24,11 +45,11 @@ const OldListScreen = ({ navigation }) => {
               flex: 1,
               justifyContent: 'center',
             }}>
-            <Text style={{ fontWeight: 'bold', fontSize: 16 }}>{item.name}</Text>
+            <Text style={{ fontWeight: 'bold', fontSize: 16 }}>{customer.cust_name}</Text>
           </View>
           <View style={{ marginRight: 20, alignItems: 'center' }}>
             <View>
-              <Text style={{ fontSize: 18, color: COLORS.primary }}>Call</Text>
+              <Text style={{ fontSize: 18, color: COLORS.primary }}>{customer.count}</Text>
             </View>
           </View>
         </View>
@@ -43,8 +64,9 @@ const OldListScreen = ({ navigation }) => {
       <FlatList
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 80 }}
-        data={foods}
-        renderItem={({ item }) => <CartCard item={item} />}
+        data={customers}
+        keyExtractor={(item, index) => item.cust_id.toString()}
+        renderItem={({ item }) => <CartCard customer={item} />}
         ListFooterComponentStyle={{ paddingHorizontal: 20, marginTop: 20 }}
       />
     </SafeAreaView>

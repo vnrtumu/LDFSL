@@ -29,7 +29,6 @@ const CustomersListScreen = ({ navigation, route }) => {
             },
           })
           .then(res => {
-            console.log(res.data.success);
             setCustomers(res.data.success);
           })
           .catch(error => console.error(`Error: ${error}`));

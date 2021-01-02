@@ -6,11 +6,15 @@ import COLORS from '../consts/colors';
 import { SecondaryButton } from '../components/Button';
 import { CheckBox } from 'react-native-elements';
 
-const initiateWhatsAppSMS = (val) => {
+
+
+const initiateWhatsAppSMS = (customer) => {
   // Using 91 for India
   // You can change 91 with your country code
+  const msg = "Hi"  +  `${customer.cust_name}` + ", My name is venkat reddy from LDFSL. Plaese share your current location to this whatsapp number." ;
+
   let url =
-    'whatsapp://send?text=hi venkat reddy&phone=91 '+val;
+    'whatsapp://send?text='+ `${msg}` +'&phone=91 '+ `${customer.cust_phone}`;
   Linking.openURL(url)
     .then((data) => {
       console.log('WhatsApp Opened');
@@ -36,7 +40,7 @@ const CustomerDetailScreen = ({ navigation, route }) => {
         </View>
         <View style={styles.addressContainer}>
           <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#fff' }}>{customer.cust_name}</Text>
-          <Text style={{ fontSize: 14, color: '#fff' }}>45th cross, Jayanagar, Bangalore.</Text>
+          <Text style={{ fontSize: 14, color: '#fff' }}>{customer.cust_address}</Text>
         </View>
         <View bottomProfileContainer>
           <TouchableOpacity
@@ -49,7 +53,7 @@ const CustomerDetailScreen = ({ navigation, route }) => {
             {customer.cust_phone}
                         </Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.buttonStyle} onPress={() => initiateWhatsAppSMS(`${customer.cust_phone}`)} >
+          <TouchableOpacity style={styles.buttonStyle} onPress={() => initiateWhatsAppSMS(customer)} >
             <Icon name="logo-whatsapp" size={23} color="#fff" />
             <Text style={{ color: '#fff', fontSize: 18, marginLeft: 5, justifyContent: 'center', alignSelf: 'center', }} >
               {customer.cust_phone}
