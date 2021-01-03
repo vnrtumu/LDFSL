@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   prrileContainer: {
-    height: 250,
+    height: 260,
     width: '100%',
     backgroundColor: COLORS.primary,
     flexDirection: 'row',

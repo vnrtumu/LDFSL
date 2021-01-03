@@ -78,7 +78,7 @@ const CustomersListScreen = ({ navigation, route }) => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 80 }}
         data={customers}
-        keyExtractor={(item, index) => item.cust_id}
+        keyExtractor={(item, index) => item.cust_id.toString()}
         renderItem={({ item }) => <CartCard customer={item} />}
         ListFooterComponentStyle={{ paddingHorizontal: 20, marginTop: 20 }}
       />

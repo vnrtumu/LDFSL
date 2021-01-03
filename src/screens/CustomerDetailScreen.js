@@ -1,20 +1,23 @@
-import React, { Component } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, Button, TouchableOpacity, Linking } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, Image, Button, SafeAreaView, TouchableOpacity, FlatList, TouchableHighlight, Linking } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import Communications from 'react-native-communications';
 import COLORS from '../consts/colors';
-import { SecondaryButton } from '../components/Button';
-import { CheckBox } from 'react-native-elements';
+import { PrimaryButton } from '../components/Button';
+
+import axios from 'axios';
+import AsyncStorage from "@react-native-community/async-storage";
+import CheckBox from '@react-native-community/checkbox';
 
 
 
 const initiateWhatsAppSMS = (customer) => {
   // Using 91 for India
   // You can change 91 with your country code
-  const msg = "Hi"  +  `${customer.cust_name}` + ", My name is venkat reddy from LDFSL. Plaese share your current location to this whatsapp number." ;
+  const msg = "Hi" + `${customer.cust_name}` + ", My name is venkat reddy from LDFSL. Plaese share your current location to this whatsapp number.";
 
   let url =
-    'whatsapp://send?text='+ `${msg}` +'&phone=91 '+ `${customer.cust_phone}`;
+    'whatsapp://send?text=' + `${msg}` + '&phone=91 ' + `${customer.cust_phone}`;
   Linking.openURL(url)
     .then((data) => {
       console.log('WhatsApp Opened');
@@ -25,10 +28,89 @@ const initiateWhatsAppSMS = (customer) => {
 };
 
 
+
+
+
 const CustomerDetailScreen = ({ navigation, route }) => {
   const customer = route.params;
+  const [checkbox, setCheckbox] = useState(false);
+  const [documents, setDocuments] = useState([]);
+
+  const handleCheckbox = (id) => {
+
+    const index =  documents.findIndex(x => x.id === id)
+
+    documents[index].checkbox =  !documents[index].checkbox;
+    documents[index].checkbox  = true;
+
+    if (checkbox == true) {
+      setCheckbox(false)
+    } else {
+      setCheckbox(true)
+    }
+  }
+  useEffect(() => {
+    var url = "http://loandarbar.in/api/custreqdocs";
+    const customerdetails = {
+      cust_id: customer.cust_id,
+      ap_type_id: customer.appointmenttype_id,
+      occupation_id: customer.occupation_id
+    };
+    AsyncStorage.getItem('token').then(token => {
+      if (token) {
+        axios
+          .post(`${url}`, customerdetails, {
+            headers: {
+              Authorization: 'Bearer ' + token,
+            },
+          })
+          .then(res => {
+            setDocuments(res.data.success);
+          })
+          .catch(error => console.error(`Error: ${error}`));
+      }
+    });
+  }, []);
+
+
+
+
+
+
+
+  const Checkbox = ({ document }) => {
+    return (
+      <TouchableHighlight
+        underlayColor={COLORS.white}
+        activeOpacity={0.9} onPress={()=> {handleCheckbox(document.id)}} >
+        <View style={styles.cartCard}>
+          <View
+            style={{
+              height: 100,
+              marginLeft: 10,
+              paddingVertical: 20,
+              flex: 1,
+              justifyContent: 'center',
+            }}>
+            <Text style={{ fontWeight: 'bold', fontSize: 15 }}>{document.doc_name}({document.type_of_doc})</Text>
+          </View>
+          <View style={{ marginRight: 20, alignItems: 'center' }}>
+            <View>
+              {checkbox == true ?
+                <Image source={require('../assets/checked.png')} style={{ height: 30, width: 30 }} />
+                :
+                <Image source={require('../assets/unchecked.png')} style={{ height: 30, width: 30 }} />
+              }
+            </View>
+          </View>
+        </View>
+      </TouchableHighlight>
+    );
+  };
+
+
   return (
-    <View style={styles.mainContainer}>
+    <SafeAreaView style={styles.mainContainer}>
       <View style={styles.profileContainer}>
         <View style={styles.headerContainer}>
           <TouchableOpacity onPress={navigation.goBack}>
@@ -50,43 +132,30 @@ const CustomerDetailScreen = ({ navigation, route }) => {
             }>
             <Icon name="ios-call" size={23} color="#fff" />
             <Text style={{ color: '#fff', fontSize: 18, marginLeft: 5, justifyContent: 'center', alignSelf: 'center', }} >
-            {customer.cust_phone}
-                        </Text>
+              {customer.cust_phone}
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.buttonStyle} onPress={() => initiateWhatsAppSMS(customer)} >
             <Icon name="logo-whatsapp" size={23} color="#fff" />
             <Text style={{ color: '#fff', fontSize: 18, marginLeft: 5, justifyContent: 'center', alignSelf: 'center', }} >
               {customer.cust_phone}
-                        </Text>
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
-      <ScrollView style={styles.checkboxContaine}>
-        <Text style={styles.mainHeading}>Required Documents</Text>
-        <View style={{ flex: 1, alignItems: 'center' }}>
-          {/* <CheckBox
-            center
-            title='Click Here'
-            checkedIcon='dot-circle-o'
-            uncheckedIcon='circle-o'
-            style={{ width: '95%' }}
-          />
-          <CheckBox
-            title='Click Here'
-            checked=""
-            style={styles.checkbox}
-          /> */}
-          {/* <CheckBox
-            checkedIcon={<Image source={require('../assets/checked.png')} style={{width:10, height:10 }} />}
-            uncheckedIcon={<Image source={require('../assets/unchecked.png')} style={{width:10, height:10 }} />}
-            
-          /> */}
-        </View>
-        {/* <View style={{ marginTop: 40, marginBottom: 40 }}>
-          <SecondaryButton title="Submit" onPress={() => navigation.navigate('SingleCustomer')} />
-        </View> */}
-      </ScrollView>
-    </View>
+      <Text style={styles.mainHeading}>List Of Documents</Text>
+      <FlatList
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 80 }}
+        data={documents}
+        keyExtractor={(item, index) => item.id.toString()}
+        renderItem={({ item }) => <Checkbox document={item} />}
+        ListFooterComponentStyle={{ paddingHorizontal: 20, marginTop: 20 }}
+      />
+     
+        <PrimaryButton title="Submit" onPress={() => navigation.navigate('Home')} />
+      
+    </SafeAreaView>
   );
 }
 
@@ -96,7 +165,7 @@ const styles = StyleSheet.create({
   },
   profileContainer: {
     backgroundColor: COLORS.primary,
-    height: '47%',
+    height: '49%',
     alignItems: 'center',
   },
   headerContainer: {
@@ -122,7 +191,7 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
   },
-  checkbox:{
+  checkbox: {
     alignSelf: 'stretch',
   },
   addressContainer: {
@@ -154,6 +223,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginTop: 15,
     marginBottom: 15,
+    marginLeft: 10,
   },
   submitBtn: {
     marginTop: 20,
@@ -169,7 +239,20 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 22,
 
-  }
+  },
+  cartCard: {
+
+    height: 60,
+    width: '90%',
+    elevation: 5,
+    borderRadius: 10,
+    backgroundColor: COLORS.white,
+    marginVertical: 10,
+    marginHorizontal: 20,
+    paddingHorizontal: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
 
 });
 export default CustomerDetailScreen;
