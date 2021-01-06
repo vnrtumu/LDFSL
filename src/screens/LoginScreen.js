@@ -1,5 +1,6 @@
 import React, {useState, useEffect} from 'react';
-import { SafeAreaView, StyleSheet, View, Text, Image, TextInput} from 'react-native';
+import { SafeAreaView, StyleSheet, View, Text, Image, TextInput, BackHandler} from 'react-native';
+
 import { ScrollView } from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import COLORS from '../consts/colors';
@@ -12,6 +13,10 @@ const LoginScreen = ({ navigation, route }) => {
   //setting initial state 
   const [email, setEmail] = useState('banana');
   const [password, setPassword] = useState('');
+
+  useEffect( () => {
+    BackHandler.addEventListener('hardwareBackPress', () => true);
+  }, []);
 
   const handleEmaiChange = (val) => {
     setEmail(val)

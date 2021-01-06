@@ -1,4 +1,4 @@
-import React, {  useState } from 'react';
+import React, {  useState,useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   ScrollView,
   FlatList,
   ActivityIndicator,
+  BackHandler,
 } from 'react-native';
 import Fontisto from 'react-native-vector-icons/Fontisto';
 import COLORS from '../consts/colors';

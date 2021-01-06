@@ -5,7 +5,7 @@ import Communications from 'react-native-communications';
 import COLORS from '../consts/colors';
 import { PrimaryButton } from '../components/Button';
 import CheckBox from "@react-native-community/checkbox";
-
+import PTRView from 'react-native-pull-to-refresh';
 
 import axios from 'axios';
 import AsyncStorage from "@react-native-community/async-storage";
@@ -18,10 +18,18 @@ class CustomerDetailScreen extends Component {
       isLoading: true,
       ProfileName: '',
       checkSelected: [],
-      customer: [], 
+      customer: [],
       getSelectedDocs: '',
     };
   }
+
+  _refresh = () => {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        resolve();
+      }, 2000);
+    });
+  };
 
   componentDidMount() {
     const custData = this.props.route.params;
@@ -66,10 +74,6 @@ class CustomerDetailScreen extends Component {
       });
   };
 
-
-
-
-
   onchecked(id) {
     const documents = this.state.documents;
     const index = documents.findIndex(x => x.id === id);
@@ -78,7 +82,7 @@ class CustomerDetailScreen extends Component {
   }
 
   getSelectedDocs() {
-    var keys = this.state.documents.map( (t) =>  t.id );
+    var keys = this.state.documents.map((t) => t.id);
     var checks = this.state.documents.map((t) => t.checked);
     var Selected = [];
     var lengthDOc = checks.length
@@ -87,30 +91,33 @@ class CustomerDetailScreen extends Component {
         Selected.push(keys[i])
       }
     }
-
-    const custData = this.props.route.params;
-    var url = "http://loandarbar.in/api/submitapplication";
-    const submitDetails = {
-      doc_ids: Selected.join(','),
-      cust_id: custData.cust_id,
-      ap_type_id: custData.appointmenttype_id,
-      occupation_id: custData.occupation_id,
-      appointment_id: custData.appointment_id,
-    };
-    AsyncStorage.getItem('token').then(token => {
-      if (token) {
-        axios
-          .post(`${url}`, submitDetails, {
-            headers: {
-              Authorization: 'Bearer ' + token,
-            },
-          })
-          .then(res => {
-            console.log(res);
-          })
-          .catch(error => console.error(`Error: ${error}`));
-      }
-    });
+    if (Selected.length > 0) {
+      const custData = this.props.route.params;
+      var url = "http://loandarbar.in/api/submitapplication";
+      const submitDetails = {
+        doc_ids: Selected.join(','),
+        cust_id: custData.cust_id,
+        ap_type_id: custData.appointmenttype_id,
+        occupation_id: custData.occupation_id,
+        appointment_id: custData.appointment_id,
+      };
+      AsyncStorage.getItem('token').then(token => {
+        if (token) {
+          axios
+            .post(`${url}`, submitDetails, {
+              headers: {
+                Authorization: 'Bearer ' + token,
+              },
+            })
+            .then(res => {
+              console.log(res);
+            })
+            .catch(error => console.error(`Error: ${error}`));
+        }
+      });
+    } else {
+      alert("please Any Doc then only submit");
+    }
   }
 
   renderDocuments() {
@@ -131,7 +138,7 @@ class CustomerDetailScreen extends Component {
               <Text style={{ fontWeight: 'bold', fontSize: 15 }}>{document.doc_name}({document.type_of_doc}) {document.checked}</Text>
             </View>
             <View style={{ marginRight: 20, alignItems: 'center' }}>
-              <CheckBox value={document.checked}  onValueChange={() => { this.onchecked(document.id) }} />
+              <CheckBox value={document.checked} onValueChange={() => { this.onchecked(document.id) }} />
             </View>
           </View>
         </TouchableHighlight>
@@ -149,11 +156,8 @@ class CustomerDetailScreen extends Component {
     const Address = custData.cust_address;
     const phone = custData.cust_phone;
 
-
-
-
-
     return (
+
       <View style={styles.mainContainer}>
         <View style={styles.profileContainer}>
           <View style={styles.headerContainer}>
@@ -188,12 +192,18 @@ class CustomerDetailScreen extends Component {
             </TouchableOpacity>
           </View>
         </View>
-        <ScrollView>
-          {this.renderDocuments()}
-          <PrimaryButton title="Submit" onPress={() => { this.getSelectedDocs() }} />
 
+
+        <ScrollView>
+          <PTRView onRefresh={this._refresh}>
+            {this.renderDocuments()}
+            <View style={{ margin: 30 }}>
+              <PrimaryButton  title="Submit" onPress={() => { this.getSelectedDocs() }} />
+            </View>
+          </PTRView>
         </ScrollView>
       </View>
+
     );
   }
 }

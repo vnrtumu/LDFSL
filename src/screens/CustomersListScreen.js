@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { SafeAreaView, StyleSheet, View, Text, Image, TouchableHighlight, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { SafeAreaView, StyleSheet, View, Text, Image, TouchableHighlight, ScrollView, TouchableOpacity, RefreshControl, } from 'react-native';
 import { FlatList } from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import COLORS from '../consts/colors';
@@ -8,10 +8,22 @@ import Communications from 'react-native-communications';
 import axios from 'axios';
 import AsyncStorage from "@react-native-community/async-storage";
 
+const wait = (timeout) => {
+  return new Promise(resolve => {
+    setTimeout(resolve, timeout);
+  });
+}
+
+
 const CustomersListScreen = ({ navigation, route }) => {
   const item = route.params;
   const [customers, setCustomers] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
 
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    wait(1).then(() => setRefreshing(false));
+  }, []);
 
   useEffect(() => {
     var url = "http://loandarbar.in/api/appointments";
@@ -70,22 +82,33 @@ const CustomersListScreen = ({ navigation, route }) => {
   };
   return (
     <SafeAreaView style={{ backgroundColor: COLORS.white, flex: 1 }}>
-      <View style={style.header}>
-        <Icon name="arrow-back-ios" size={28} onPress={navigation.goBack} />
-        <Text style={{ fontSize: 20, fontWeight: 'bold' }}>{item.type_name}</Text>
-      </View>
-      <FlatList
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 80 }}
-        data={customers}
-        keyExtractor={(item, index) => item.cust_id.toString()}
-        renderItem={({ item }) => <CartCard customer={item} />}
-        ListFooterComponentStyle={{ paddingHorizontal: 20, marginTop: 20 }}
-      />
+      <ScrollView
+        contentContainerStyle={style.scrollView}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
+        <View style={style.header}>
+          <Icon name="arrow-back-ios" size={28} onPress={navigation.goBack} />
+          <Text style={{ fontSize: 20, fontWeight: 'bold' }}>{item.type_name}</Text>
+        </View>
+        <FlatList
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 80 }}
+          data={customers}
+          keyExtractor={(item, index) => item.cust_id.toString()}
+          renderItem={({ item }) => <CartCard customer={item} />}
+          ListFooterComponentStyle={{ paddingHorizontal: 20, marginTop: 20 }}
+        />
+
+      </ScrollView>
     </SafeAreaView>
   );
 };
 const style = StyleSheet.create({
+  scrollView: {
+    flex: 1,
+  },
   header: {
     paddingVertical: 20,
     flexDirection: 'row',

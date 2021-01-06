@@ -1,22 +1,37 @@
-import React, { useState, useEffect } from 'react';
-import { SafeAreaView, StyleSheet, View, Text, Image, TouchableHighlight } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { SafeAreaView, StyleSheet, View, Text, Image, TouchableHighlight, ScrollView, RefreshControl } from 'react-native';
 import { FlatList } from 'react-native-gesture-handler';
-import Icon from 'react-native-vector-icons/MaterialIcons';
 import COLORS from '../consts/colors';
-import foods from '../consts/foods';
 
 import axios from 'axios';
 import AsyncStorage from "@react-native-community/async-storage";
 
+
+const wait = (timeout) => {
+  return new Promise(resolve => {
+    setTimeout(resolve, timeout);
+  });
+}
+
 const OldListScreen = ({ navigation }) => {
   const [customers, setCustomers] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    wait(1).then(() => setRefreshing(false));
+  }, []);
+
+
+
+
   useEffect(() => {
     var url = "http://loandarbar.in/api/closedappointments";
 
     AsyncStorage.getItem('token').then(token => {
       if (token) {
         axios
-          .get(`${url}`,  {
+          .get(`${url}`, {
             headers: {
               Authorization: 'Bearer ' + token,
             },
@@ -34,9 +49,9 @@ const OldListScreen = ({ navigation }) => {
       <TouchableHighlight
         underlayColor={COLORS.white}
         activeOpacity={0.9}
-        >
+      >
         <View style={style.cartCard}>
-        <Image source={require('../assets/avatar.png')} style={{ height: 80, width: 80 }} />
+          <Image source={require('../assets/avatar.png')} style={{ height: 80, width: 80 }} />
           <View
             style={{
               height: 100,
@@ -58,21 +73,31 @@ const OldListScreen = ({ navigation }) => {
   };
   return (
     <SafeAreaView style={{ backgroundColor: COLORS.white, flex: 1 }}>
-      <View style={style.header}>
-        <Text style={{ fontSize: 20, fontWeight: 'bold' }}>Old Customers</Text>
-      </View>
-      <FlatList
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 80 }}
-        data={customers}
-        keyExtractor={(item, index) => item.cust_id.toString()}
-        renderItem={({ item }) => <CartCard customer={item} />}
-        ListFooterComponentStyle={{ paddingHorizontal: 20, marginTop: 20 }}
-      />
+      <ScrollView
+        contentContainerStyle={style.scrollView}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
+        <View style={style.header}>
+          <Text style={{ fontSize: 20, fontWeight: 'bold' }}>Old Customers</Text>
+        </View>
+        <FlatList
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 80 }}
+          data={customers}
+          keyExtractor={(item, index) => item.cust_id.toString()}
+          renderItem={({ item }) => <CartCard customer={item} />}
+          ListFooterComponentStyle={{ paddingHorizontal: 20, marginTop: 20 }}
+        />
+      </ScrollView>
     </SafeAreaView>
   );
 };
 const style = StyleSheet.create({
+  scrollView: {
+    flex: 1,
+  },
   header: {
     paddingVertical: 20,
     flexDirection: 'row',
