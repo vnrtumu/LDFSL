@@ -1,60 +1,35 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, Button, SafeAreaView, TouchableOpacity, FlatList, TouchableHighlight, Linking } from 'react-native';
+import React, { Component } from 'react';
+import { View, Text, StyleSheet, ScrollView, FlatList, Image, Button, TouchableHighlight, TouchableOpacity, Linking } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import Communications from 'react-native-communications';
 import COLORS from '../consts/colors';
 import { PrimaryButton } from '../components/Button';
+import CheckBox from "@react-native-community/checkbox";
+
 
 import axios from 'axios';
 import AsyncStorage from "@react-native-community/async-storage";
-import CheckBox from '@react-native-community/checkbox';
 
-
-
-const initiateWhatsAppSMS = (customer) => {
-  // Using 91 for India
-  // You can change 91 with your country code
-  const msg = "Hi" + `${customer.cust_name}` + ", My name is venkat reddy from LDFSL. Plaese share your current location to this whatsapp number.";
-
-  let url =
-    'whatsapp://send?text=' + `${msg}` + '&phone=91 ' + `${customer.cust_phone}`;
-  Linking.openURL(url)
-    .then((data) => {
-      console.log('WhatsApp Opened');
-    })
-    .catch(() => {
-      alert('Make sure Whatsapp installed on your device');
-    });
-};
-
-
-
-
-
-const CustomerDetailScreen = ({ navigation, route }) => {
-  const customer = route.params;
-  const [checkbox, setCheckbox] = useState(false);
-  const [documents, setDocuments] = useState([]);
-
-  const handleCheckbox = (id) => {
-
-    const index =  documents.findIndex(x => x.id === id)
-
-    documents[index].checkbox =  !documents[index].checkbox;
-    documents[index].checkbox  = true;
-
-    if (checkbox == true) {
-      setCheckbox(false)
-    } else {
-      setCheckbox(true)
-    }
+class CustomerDetailScreen extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      documents: [],
+      isLoading: true,
+      ProfileName: '',
+      checkSelected: [],
+      customer: [], 
+      getSelectedDocs: '',
+    };
   }
-  useEffect(() => {
+
+  componentDidMount() {
+    const custData = this.props.route.params;
     var url = "http://loandarbar.in/api/custreqdocs";
     const customerdetails = {
-      cust_id: customer.cust_id,
-      ap_type_id: customer.appointmenttype_id,
-      occupation_id: customer.occupation_id
+      cust_id: custData.cust_id,
+      ap_type_id: custData.appointmenttype_id,
+      occupation_id: custData.occupation_id
     };
     AsyncStorage.getItem('token').then(token => {
       if (token) {
@@ -65,99 +40,164 @@ const CustomerDetailScreen = ({ navigation, route }) => {
             },
           })
           .then(res => {
-            setDocuments(res.data.success);
+            this.setState({ documents: res.data.success });
           })
           .catch(error => console.error(`Error: ${error}`));
       }
     });
-  }, []);
+  }
 
+  initiateWhatsAppSMS = () => {
+    // Using 91 for India
+    // You can change 91 with your country code
+    const custData = this.props.route.params;
+    const custName = custData.cust_name;
+    const Address = custData.cust_address;
+    const phone = custData.cust_phone;
+    const msg = "Hi" + `${custName}` + ", My name is venkat reddy from LDFSL. Plaese share your current location to this whatsapp number.";
 
-
-
-
-
-
-  const Checkbox = ({ document }) => {
-    return (
-      <TouchableHighlight
-        underlayColor={COLORS.white}
-        activeOpacity={0.9} onPress={()=> {handleCheckbox(document.id)}} >
-        <View style={styles.cartCard}>
-          <View
-            style={{
-              height: 100,
-              marginLeft: 10,
-              paddingVertical: 20,
-              flex: 1,
-              justifyContent: 'center',
-            }}>
-            <Text style={{ fontWeight: 'bold', fontSize: 15 }}>{document.doc_name}({document.type_of_doc})</Text>
-          </View>
-          <View style={{ marginRight: 20, alignItems: 'center' }}>
-            <View>
-              {checkbox == true ?
-                <Image source={require('../assets/checked.png')} style={{ height: 30, width: 30 }} />
-                :
-                <Image source={require('../assets/unchecked.png')} style={{ height: 30, width: 30 }} />
-              }
-            </View>
-          </View>
-        </View>
-      </TouchableHighlight>
-    );
+    let url = 'whatsapp://send?text=' + `${msg}` + '&phone=91 ' + `${phone}`;
+    Linking.openURL(url)
+      .then((data) => {
+        console.log('WhatsApp Opened');
+      })
+      .catch(() => {
+        alert('Make sure Whatsapp installed on your device');
+      });
   };
 
 
-  return (
-    <SafeAreaView style={styles.mainContainer}>
-      <View style={styles.profileContainer}>
-        <View style={styles.headerContainer}>
-          <TouchableOpacity onPress={navigation.goBack}>
-            <Icon name="arrow-back" size={30} color="#fff" />
-          </TouchableOpacity>
+
+
+
+  onchecked(id) {
+    const documents = this.state.documents;
+    const index = documents.findIndex(x => x.id === id);
+    documents[index].checked = !documents[index].checked;
+    this.setState(documents)
+  }
+
+  getSelectedDocs() {
+    var keys = this.state.documents.map( (t) =>  t.id );
+    var checks = this.state.documents.map((t) => t.checked);
+    var Selected = [];
+    var lengthDOc = checks.length
+    for (var i = 0; i < lengthDOc; i++) {
+      if (checks[i] == true) {
+        Selected.push(keys[i])
+      }
+    }
+
+    const custData = this.props.route.params;
+    var url = "http://loandarbar.in/api/submitapplication";
+    const submitDetails = {
+      doc_ids: Selected.join(','),
+      cust_id: custData.cust_id,
+      ap_type_id: custData.appointmenttype_id,
+      occupation_id: custData.occupation_id,
+      appointment_id: custData.appointment_id,
+    };
+    AsyncStorage.getItem('token').then(token => {
+      if (token) {
+        axios
+          .post(`${url}`, submitDetails, {
+            headers: {
+              Authorization: 'Bearer ' + token,
+            },
+          })
+          .then(res => {
+            console.log(res);
+          })
+          .catch(error => console.error(`Error: ${error}`));
+      }
+    });
+  }
+
+  renderDocuments() {
+    return this.state.documents.map((document, id) => {
+      return (
+        <TouchableHighlight
+          underlayColor={COLORS.white}
+          activeOpacity={0.9} onPress={() => { this.onchecked(document.id) }} key={id} >
+          <View style={styles.cartCard}>
+            <View
+              style={{
+                height: 100,
+                marginLeft: 10,
+                paddingVertical: 20,
+                flex: 1,
+                justifyContent: 'center',
+              }}>
+              <Text style={{ fontWeight: 'bold', fontSize: 15 }}>{document.doc_name}({document.type_of_doc}) {document.checked}</Text>
+            </View>
+            <View style={{ marginRight: 20, alignItems: 'center' }}>
+              <CheckBox value={document.checked}  onValueChange={() => { this.onchecked(document.id) }} />
+            </View>
+          </View>
+        </TouchableHighlight>
+      );
+    })
+
+  };
+
+
+
+  render() {
+
+    const custData = this.props.route.params;
+    const custName = custData.cust_name;
+    const Address = custData.cust_address;
+    const phone = custData.cust_phone;
+
+
+
+
+
+    return (
+      <View style={styles.mainContainer}>
+        <View style={styles.profileContainer}>
+          <View style={styles.headerContainer}>
+            <TouchableOpacity onPress={() => this.props.navigation.goBack()}>
+              <Icon name="arrow-back" size={30} color="#fff" />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.imageContainer}>
+            <Image source={require('../assets/pic.jpeg')} style={styles.imageStyle} />
+          </View>
+          <View style={styles.addressContainer}>
+            <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#fff' }}>{custName}</Text>
+            <Text style={{ fontSize: 14, color: '#fff' }}>{Address}</Text>
+          </View>
+          <View bottomProfileContainer>
+            <TouchableOpacity
+              style={styles.buttonStyle}
+              onPress={
+                () => Communications.phonecall(`${phone}`, true)
+              }>
+              <Icon name="ios-call" size={23} color="#fff" />
+              <Text style={{ color: '#fff', fontSize: 18, marginLeft: 5, justifyContent: 'center', alignSelf: 'center', }} >
+                {phone}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.buttonStyle} onPress={() => this.initiateWhatsAppSMS()} >
+              <Icon name="logo-whatsapp" size={23} color="#fff" />
+              <Text style={{ color: '#fff', fontSize: 18, marginLeft: 5, justifyContent: 'center', alignSelf: 'center', }} >
+                {phone}
+              </Text>
+
+            </TouchableOpacity>
+          </View>
         </View>
-        <View style={styles.imageContainer}>
-          <Image source={require('../assets/avatar.png')} style={styles.imageStyle} />
-        </View>
-        <View style={styles.addressContainer}>
-          <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#fff' }}>{customer.cust_name}</Text>
-          <Text style={{ fontSize: 14, color: '#fff' }}>{customer.cust_address}</Text>
-        </View>
-        <View bottomProfileContainer>
-          <TouchableOpacity
-            style={styles.buttonStyle}
-            onPress={
-              () => Communications.phonecall(`${customer.cust_phone}`, true)
-            }>
-            <Icon name="ios-call" size={23} color="#fff" />
-            <Text style={{ color: '#fff', fontSize: 18, marginLeft: 5, justifyContent: 'center', alignSelf: 'center', }} >
-              {customer.cust_phone}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.buttonStyle} onPress={() => initiateWhatsAppSMS(customer)} >
-            <Icon name="logo-whatsapp" size={23} color="#fff" />
-            <Text style={{ color: '#fff', fontSize: 18, marginLeft: 5, justifyContent: 'center', alignSelf: 'center', }} >
-              {customer.cust_phone}
-            </Text>
-          </TouchableOpacity>
-        </View>
+        <ScrollView>
+          {this.renderDocuments()}
+          <PrimaryButton title="Submit" onPress={() => { this.getSelectedDocs() }} />
+
+        </ScrollView>
       </View>
-      <Text style={styles.mainHeading}>List Of Documents</Text>
-      <FlatList
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 80 }}
-        data={documents}
-        keyExtractor={(item, index) => item.id.toString()}
-        renderItem={({ item }) => <Checkbox document={item} />}
-        ListFooterComponentStyle={{ paddingHorizontal: 20, marginTop: 20 }}
-      />
-     
-        <PrimaryButton title="Submit" onPress={() => navigation.navigate('Home')} />
-      
-    </SafeAreaView>
-  );
+    );
+  }
 }
+
 
 const styles = StyleSheet.create({
   mainContainer: {
@@ -165,7 +205,7 @@ const styles = StyleSheet.create({
   },
   profileContainer: {
     backgroundColor: COLORS.primary,
-    height: '49%',
+    height: '47%',
     alignItems: 'center',
   },
   headerContainer: {
@@ -190,9 +230,7 @@ const styles = StyleSheet.create({
     borderRadius: 60,
     width: 120,
     height: 120,
-  },
-  checkbox: {
-    alignSelf: 'stretch',
+
   },
   addressContainer: {
     marginTop: 10,
@@ -207,7 +245,10 @@ const styles = StyleSheet.create({
   buttonStyle: {
     marginTop: 10,
     flexDirection: 'row',
+    // borderRightColor: '#fff',
+    // borderRightWidth: 2,
     paddingRight: 10,
+
   },
   checkboxContaine: {
     flex: 4,
@@ -223,7 +264,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginTop: 15,
     marginBottom: 15,
-    marginLeft: 10,
   },
   submitBtn: {
     marginTop: 20,
@@ -255,4 +295,7 @@ const styles = StyleSheet.create({
   },
 
 });
+
+
 export default CustomerDetailScreen;
+
