@@ -15,6 +15,7 @@ import COLORS from '../consts/colors';
 import axios from 'axios';
 import AsyncStorage from "@react-native-community/async-storage";
 import { PrimaryButton } from '../components/Button';
+import config from '../config';
 
 const EmployeeProfileScreen = ({navigation}) => {
 

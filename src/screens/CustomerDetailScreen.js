@@ -9,6 +9,7 @@ import PTRView from 'react-native-pull-to-refresh';
 
 import axios from 'axios';
 import AsyncStorage from "@react-native-community/async-storage";
+import config from '../config';
 
 class CustomerDetailScreen extends Component {
   constructor(props) {
@@ -33,7 +34,6 @@ class CustomerDetailScreen extends Component {
 
   componentDidMount() {
     const custData = this.props.route.params;
-    var url = "http://loandarbar.in/api/custreqdocs";
     const customerdetails = {
       cust_id: custData.cust_id,
       ap_type_id: custData.appointmenttype_id,
@@ -42,7 +42,7 @@ class CustomerDetailScreen extends Component {
     AsyncStorage.getItem('token').then(token => {
       if (token) {
         axios
-          .post(`${url}`, customerdetails, {
+          .post(`${config.API_URL}/custreqdocs`, customerdetails, {
             headers: {
               Authorization: 'Bearer ' + token,
             },
@@ -93,7 +93,6 @@ class CustomerDetailScreen extends Component {
     }
     if (Selected.length > 0) {
       const custData = this.props.route.params;
-      var url = "http://loandarbar.in/api/submitapplication";
       const submitDetails = {
         doc_ids: Selected.join(','),
         cust_id: custData.cust_id,
@@ -104,7 +103,7 @@ class CustomerDetailScreen extends Component {
       AsyncStorage.getItem('token').then(token => {
         if (token) {
           axios
-            .post(`${url}`, submitDetails, {
+            .post(`${config.API_URL}/submitapplication`, submitDetails, {
               headers: {
                 Authorization: 'Bearer ' + token,
               },

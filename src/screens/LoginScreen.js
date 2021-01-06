@@ -8,6 +8,7 @@ import { SecondaryButton } from '../components/Button';
 import { sub } from 'react-native-reanimated';
 import axios from 'axios';
 import AsyncStorage from "@react-native-community/async-storage";
+import config from '../config';
 
 const LoginScreen = ({ navigation, route }) => {
   //setting initial state 
@@ -27,11 +28,7 @@ const LoginScreen = ({ navigation, route }) => {
   }
 
   const loginHandle = () => {
-      console.log(email);
-      console.log(password);
-      const url = "http://loandarbar.in/api/login";
-      console.log(url);
-      axios.post(`${url}`, {email, password})
+      axios.post(`${config.API_URL}/login`, {email, password})
             .then((response)=> {
                 AsyncStorage.setItem('token', response.data.success.token);
                 AsyncStorage.setItem('name', response.data.success.name);

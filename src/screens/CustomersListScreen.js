@@ -7,6 +7,7 @@ import Communications from 'react-native-communications';
 
 import axios from 'axios';
 import AsyncStorage from "@react-native-community/async-storage";
+import config from '../config';
 
 const wait = (timeout) => {
   return new Promise(resolve => {
@@ -26,16 +27,13 @@ const CustomersListScreen = ({ navigation, route }) => {
   }, []);
 
   useEffect(() => {
-    var url = "http://loandarbar.in/api/appointments";
-
     const type = {
       typeId: item.type_id,
     };
-
     AsyncStorage.getItem('token').then(token => {
       if (token) {
         axios
-          .post(`${url}`, type, {
+          .post(`${config.API_URL}/appointments`, type, {
             headers: {
               Authorization: 'Bearer ' + token,
             },

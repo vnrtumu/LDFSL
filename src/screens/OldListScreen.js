@@ -5,6 +5,7 @@ import COLORS from '../consts/colors';
 
 import axios from 'axios';
 import AsyncStorage from "@react-native-community/async-storage";
+import config from '../config';
 
 
 const wait = (timeout) => {
@@ -22,16 +23,11 @@ const OldListScreen = ({ navigation }) => {
     wait(1).then(() => setRefreshing(false));
   }, []);
 
-
-
-
   useEffect(() => {
-    var url = "http://loandarbar.in/api/closedappointments";
-
     AsyncStorage.getItem('token').then(token => {
       if (token) {
         axios
-          .get(`${url}`, {
+          .get(`${config.API_URL}/closedappointments`, {
             headers: {
               Authorization: 'Bearer ' + token,
             },

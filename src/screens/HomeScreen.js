@@ -22,6 +22,7 @@ import COLORS from '../consts/colors';
 
 import axios from 'axios';
 import AsyncStorage from "@react-native-community/async-storage";
+import config from '../config';
 
 const { width } = Dimensions.get('screen');
 const cardWidth = width / 2 - 20;
@@ -43,10 +44,9 @@ const HomeScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
 
   const refreshScreen = () => {
-    var url = "http://loandarbar.in/api/typeofappointments";
     AsyncStorage.getItem('token').then(token => {
       if (token) {
-        axios.get(`${url}`, {
+        axios.get(`${config.API_URL}/typeofappointments`, {
           headers: { Authorization: 'Bearer ' + token },
         })
           .then(res => {
