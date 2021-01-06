@@ -8,6 +8,7 @@ import {
   View,
   BackHandler,
   RefreshControl,
+  ActivityIndicator,
 } from 'react-native';
 import {
   FlatList,
@@ -28,18 +29,39 @@ const cardWidth = width / 2 - 20;
 const wait = (timeout) => {
   return new Promise(resolve => {
     setTimeout(resolve, timeout);
+
   });
 }
+
+
 
 const HomeScreen = ({ navigation }) => {
   const [name, setName] = useState('');
   const [userId, setUserId] = useState('');
   const [types, setTypes] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  const refreshScreen = () => {
+    var url = "http://loandarbar.in/api/typeofappointments";
+    AsyncStorage.getItem('token').then(token => {
+      if (token) {
+        axios.get(`${url}`, {
+          headers: { Authorization: 'Bearer ' + token },
+        })
+          .then(res => {
+            setLoading(false);
+            setTypes(res.data.success)
+          })
+          .catch(error => console.error(`Error: ${error}`));
+      }
+    });
+  };
 
   const onRefresh = useCallback(() => {
+    refreshScreen();
     setRefreshing(true);
-    wait(1).then(() => setRefreshing(false));
+    wait(1000).then(() => setRefreshing(false));
   }, []);
 
   AsyncStorage.getItem('name').then(name => {
@@ -53,21 +75,8 @@ const HomeScreen = ({ navigation }) => {
     }
   });
 
-
   useEffect(() => {
-    BackHandler.addEventListener('hardwareBackPress', () => true);
-    var url = "http://loandarbar.in/api/typeofappointments";
-    AsyncStorage.getItem('token').then(token => {
-      if (token) {
-        axios.get(`${url}`, {
-          headers: { Authorization: 'Bearer ' + token },
-        })
-          .then(res => {
-            setTypes(res.data.success)
-          })
-          .catch(error => console.error(`Error: ${error}`));
-      }
-    });
+    refreshScreen();
   }, []);
 
   const Card = ({ type }) => {
@@ -98,41 +107,60 @@ const HomeScreen = ({ navigation }) => {
       </TouchableHighlight>
     );
   };
-  return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.white }}>
-      <ScrollView
-        contentContainerStyle={style.scrollView}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-      >
-        <View style={style.header}>
-          <View>
-            <View style={{ flexDirection: 'row' }}>
-              <Text style={{ fontSize: 22 }}>Hello,</Text>
-              <Text style={{ fontSize: 25, fontWeight: 'bold', marginLeft: 10 }}>
-                {name}
-              </Text>
-            </View>
-            <Text style={{ marginTop: 5, fontSize: 22, color: COLORS.grey }}>
-              These are your appointments
-          </Text>
-          </View>
-          <Image
-            source={require('../assets/pic.jpeg')}
-            style={{ height: 50, width: 50, borderRadius: 25 }}
-          />
+
+  if (loading) {
+    return (
+        <View
+          style={{
+            flex: 1,
+            padding: 20,
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: '#fff',
+          }}>
+          <ActivityIndicator size={'large'} />
+          <Text>Loding...</Text>
         </View>
-        <FlatList
-          showsVerticalScrollIndicator={false}
-          numColumns={2}
-          data={types}
-          keyExtractor={(item, index) => item.type_id}
-          renderItem={({ item }) => <Card type={item} />}
-        />
-      </ScrollView>
-    </SafeAreaView>
-  );
+    );
+  } else {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.white }}>
+        <ScrollView
+          contentContainerStyle={style.scrollView}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        >
+          <View style={style.header}>
+            <View>
+              <View style={{ flexDirection: 'row' }}>
+                <Text style={{ fontSize: 22 }}>Hello,</Text>
+                <Text style={{ fontSize: 25, fontWeight: 'bold', marginLeft: 10 }}>
+                  {name}
+                </Text>
+              </View>
+              <Text style={{ marginTop: 5, fontSize: 22, color: COLORS.grey }}>
+                These are your appointments
+            </Text>
+            </View>
+            <Image
+              source={require('../assets/pic.jpeg')}
+              style={{ height: 50, width: 50, borderRadius: 25 }}
+            />
+          </View>
+          <FlatList
+            showsVerticalScrollIndicator={false}
+            numColumns={2}
+            data={types}
+            keyExtractor={(item, index) => item.type_id}
+            renderItem={({ item }) => <Card type={item}
+            />}
+          />
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
 };
 
 const style = StyleSheet.create({

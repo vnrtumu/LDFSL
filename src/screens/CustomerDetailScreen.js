@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { View, Text, StyleSheet, ScrollView, FlatList, Image, Button, TouchableHighlight, TouchableOpacity, Linking } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, FlatList, Image, Alert, Button, TouchableHighlight, TouchableOpacity, Linking } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import Communications from 'react-native-communications';
 import COLORS from '../consts/colors';
@@ -111,12 +111,36 @@ class CustomerDetailScreen extends Component {
             })
             .then(res => {
               console.log(res);
+              Alert.alert(
+                "Success",
+                `${res.data.success}`,
+                [
+                 
+                  { text: "OK", onPress: () => this.props. navigation.reset({
+                    index: 0,
+                    routes: [{ name: "Home" }],
+                  }) }
+                ],
+                { cancelable: false }
+              );
             })
             .catch(error => console.error(`Error: ${error}`));
         }
       });
     } else {
-      alert("please Any Doc then only submit");
+      Alert.alert(
+        "Alert Title",
+        "My Alert Msg",
+        [
+          {
+            text: "Cancel",
+            onPress: () => console.log("Cancel Pressed"),
+            style: "cancel"
+          },
+          { text: "OK", onPress: () => console.log("Ok Pressed")}
+        ],
+        { cancelable: false }
+      );
     }
   }
 
