@@ -7,7 +7,7 @@ import {PrimaryButton} from '../components/Button';
 const OnBoardScreen = ({navigation}) => {
   return (
     <SafeAreaView style={{flex: 1, backgroundColor: COLORS.white}}>
-      <View style={{height: 400}}>
+      <View style={{height: 400, marginTop: 120}}>
         <Image
           style={{
             width: '100%',
