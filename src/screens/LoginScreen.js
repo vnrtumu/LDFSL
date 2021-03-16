@@ -30,11 +30,13 @@ const LoginScreen = ({ navigation, route }) => {
   const loginHandle = () => {
       axios.post(`${config.API_URL}/login`, {email, password})
             .then((response)=> {
-                AsyncStorage.setItem('token', response.data.success.token);
-                AsyncStorage.setItem('name', response.data.success.name);
-                AsyncStorage.setItem('email', response.data.success.email);
-                AsyncStorage.setItem('user_id', JSON.stringify(response.data.success.user_id));
-                navigation.navigate('Home');
+
+                console.log(response.message);
+                // AsyncStorage.setItem('token', response.data.success.token);
+                // AsyncStorage.setItem('name', response.data.success.name);
+                // AsyncStorage.setItem('email', response.data.success.email);
+                // AsyncStorage.setItem('user_id', JSON.stringify(response.data.success.user_id));
+                // navigation.navigate('Home');
             })
             .catch(error => console.error(`Error: ${error}`));
   }
